@@ -4,9 +4,9 @@ require File.expand_path('../lib/choose_your_own/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Matt Burke"]
   gem.email         = ["spraints@gmail.com"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
-  gem.homepage      = ""
+  gem.description   = %q{Define multiple-choice inputs of in an ActionView form}
+  gem.summary       = %q{Define multiple-choice inputs of in an ActionView form}
+  gem.homepage      = "http://github.com/spraints/choose_your_own"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }

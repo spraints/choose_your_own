@@ -1,6 +1,7 @@
-# ChooseYourOwn
+# Choose Your Own Adventure
 
-TODO: Write a gem description
+The `choose_your_own` gem helps you define a multiple-choice
+part of your view.
 
 ## Installation
 
@@ -18,7 +19,49 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+For example, let's say you want to let a user choose her avatar.
+She can either upload a file or enter a URL. Inside of `form_for`,
+add this:
+
+```erb
+<%= form_for :user, :multipart => true do |f| %>
+  <%= f.multiple_choice :avatar_source do |choice| %>
+    <%= choice.url %>
+    <%= choice.file_upload %>
+  <% end %>
+<% end %>
+```
+
+Create view partials for the two choices:
+
+```erb
+# app/views/avatar_source_choices/_url.html.erb
+<%= f.text_field :avatar_url %>
+
+# app/views/avatar_source_choices/_file_upload.html.erb
+<%= f.file_field :attached_avatar %>
+```
+
+The generated HTML will look like this:
+
+```html
+<div class="choose_your_own user_avatar_source_choices">
+  <input type="hidden" name="user_avatar_choice" value="url" />
+  <div class="choose_your_own_choice user_avatar_source_choice" id="user_avatar_source_url" class="active">
+    <input type="text" name="user[avatar_url]" id="user_avatar_url" />
+  </div>
+  <div class="choose_your_own_choice user_avatar_source_choice" id="user_avatar_source_attached_avatar">
+    <input type="file" name="user[attached_avatar]" id="user_attached_avatar" />
+  </div>
+</div>
+```
+
+Based on the current value of `avatar_source`, a different
+choice will be marked with class="active". Note: if `avatar_source`
+has no value, then none of the options will be active.
+
+If you include our javascript, then clicking in one of the
+divs will mark it as active.
 
 ## Contributing
 
