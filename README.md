@@ -25,9 +25,9 @@ add this:
 
 ```erb
 <%= form_for :user, :multipart => true do |f| %>
-  <%= f.multiple_choice :avatar_source do |choice| %>
-    <%= choice.url %>
-    <%= choice.file_upload %>
+  <%= f.choose_your_own :avatar_source do |x| %>
+    <%= x.choice :url %>
+    <%= x.choice :file_upload %>
   <% end %>
 <% end %>
 ```
@@ -35,10 +35,10 @@ add this:
 Create view partials for the two choices:
 
 ```erb
-# app/views/avatar_source_choices/_url.html.erb
+# app/views/users/avatar_sources/_url.html.erb
 <%= f.text_field :avatar_url %>
 
-# app/views/avatar_source_choices/_file_upload.html.erb
+# app/views/users/avatar_sources/_file_upload.html.erb
 <%= f.file_field :attached_avatar %>
 ```
 

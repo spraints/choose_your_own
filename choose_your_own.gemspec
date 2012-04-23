@@ -14,4 +14,7 @@ Gem::Specification.new do |gem|
   gem.name          = "choose_your_own"
   gem.require_paths = ["lib"]
   gem.version       = ChooseYourOwn::VERSION
+
+  gem.add_dependency('activemodel',     '~> 3.0')
+  gem.add_dependency('actionpack',      '~> 3.0')
 end
