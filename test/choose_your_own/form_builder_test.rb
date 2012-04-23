@@ -5,6 +5,34 @@ class ChooseYourOwnFormBuilderTest < ActionView::TestCase
     @example = ExampleModel.new
   end
 
+  test "readme" do
+    actual = render :inline => <<ERB
+<%= form_for :user, :url => '/example', :multipart => true do |f| %>
+  <%= f.choose_your_own :avatar_source do |x| %>
+    <%= x.choice :url do %>
+      <%= f.text_field :avatar_url %>
+    <% end %>
+    <%= x.choice :file_upload do%>
+      <%= f.file_field :attached_avatar %>
+    <% end %>
+  <% end %>
+<% end %>
+ERB
+    expected = <<HTML
+<div class="choose_your_own user_avatar_source_choices">
+  <input type="hidden" name="user[avatar_source]" id="user_avatar_source" />
+  <div class="choose_your_own_choice user_avatar_source_choice" id="user_avatar_source_url">
+    <input type="text" name="user[avatar_url]" id="user_avatar_url" size="30" />
+  </div>
+  <div class="choose_your_own_choice user_avatar_source_choice" id="user_avatar_source_file_upload">
+    <input type="file" name="user[attached_avatar]" id="user_attached_avatar" />
+  </div>
+</div>
+HTML
+    actual = HTML::Document.new(actual).root.children.first.children.last.to_s # -> the <div> of intereset
+    assert_dom_equal expected, actual, "example from the readme"
+  end
+
   test "creates the hidden bookkeeping element" do
     form_for(@example) do |f|
       assert_dom_equal '<div class="choose_your_own example_model_name_type_choices"><input type="hidden" name="example_model[name_type]" id="example_model_name_type" /></div>',

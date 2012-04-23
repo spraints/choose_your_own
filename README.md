@@ -40,19 +40,18 @@ The generated HTML will look like this:
 
 ```html
 <div class="choose_your_own user_avatar_source_choices">
-  <input type="hidden" name="user_avatar_choice" value="url" />
-  <div class="choose_your_own_choice user_avatar_source_choice" id="user_avatar_source_url" class="active">
-    <input type="text" name="user[avatar_url]" id="user_avatar_url" />
+  <input type="hidden" name="user[avatar_source]" id="user_avatar_source" />
+  <div class="choose_your_own_choice user_avatar_source_choice" id="user_avatar_source_url">
+    <input type="text" name="user[avatar_url]" id="user_avatar_url" size="30" />
   </div>
-  <div class="choose_your_own_choice user_avatar_source_choice" id="user_avatar_source_attached_avatar">
+  <div class="choose_your_own_choice user_avatar_source_choice" id="user_avatar_source_file_upload">
     <input type="file" name="user[attached_avatar]" id="user_attached_avatar" />
   </div>
 </div>
 ```
 
-Based on the current value of `avatar_source`, a different
-choice will be marked with class="active". Note: if `avatar_source`
-has no value, then none of the options will be active.
+In the example above, if `avatar_source` has a value, one of the
+child <div> elements will get the additional class "active".
 
 If you include our javascript, then clicking in one of the
 divs will mark it as active.
