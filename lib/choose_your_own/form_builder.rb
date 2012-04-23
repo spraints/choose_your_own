@@ -22,10 +22,9 @@ module ChooseYourOwn
       def category_method ; @category_method.to_s                              ; end
       def selected        ; @selected ||= ActionView::Helpers::InstanceTag.value_before_type_cast(object, category_method).to_s ; end
 
-      def choice(method)
-        template.content_tag :div, :class => "#{method.to_s == selected ? 'active ' : ''}choose_your_own_choice #{object_name}_#{category_method}_choice", :id => "#{object_name}_#{category_method}_#{method}" do
-          template.render "#{object_name.pluralize}/#{category_method.pluralize}/#{method}"
-        end
+      def choice(method, &block)
+        block ||= lambda {}
+        template.content_tag :div, :class => "#{method.to_s == selected ? 'active ' : ''}choose_your_own_choice #{object_name}_#{category_method}_choice", :id => "#{object_name}_#{category_method}_#{method}", &block
       end
     end
   end

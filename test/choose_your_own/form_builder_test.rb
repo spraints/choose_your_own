@@ -3,8 +3,6 @@ require 'test_helper'
 class ChooseYourOwnFormBuilderTest < ActionView::TestCase
   setup do
     @example = ExampleModel.new
-    @test_template_resolver = TestTemplateResolver.new
-    @controller.append_view_path @test_template_resolver
   end
 
   test "creates the hidden bookkeeping element" do
@@ -52,13 +50,15 @@ class ChooseYourOwnFormBuilderTest < ActionView::TestCase
   end
 
   test "renders a template for the option" do
+    ok = false
     form_for(@example) do |f|
       f.choose_your_own :name_type do |x|
-        @test_template_resolver.expect_render_partial("example_models/name_types/variety_a", :example_model => @example, :f => f) do
-          x.choice(:variety_a)
+        x.choice(:variety_a) do
+          ok = true
         end
       end
     end
+    assert ok, "Expected x.choice to yield"
   end
 
   def example_models_path(*_)
@@ -71,68 +71,5 @@ class ChooseYourOwnFormBuilderTest < ActionView::TestCase
     def self.model_name ; ActiveModel::Name.new(self, nil, 'ExampleModel') ; end
 
     attr_accessor :name_type
-  end
-
-  class TestTemplateResolver < ActionView::Resolver
-    def expect_render_partial(path, expectations)
-      template = expected_partials[path] = ExpectedPartial.new(path)
-      yield
-      template.assert expectations
-    end
-
-    protected
-
-    def find_templates(name, prefix, partial, details)
-      [if partial && template = expected_partial(name, prefix)
-        template
-      else
-        empty_template
-      end.tap do |res|
-        res.formats = details[:formats]
-      end]
-    end
-
-    def expected_partials
-      @expected_partials ||= {}
-    end
-
-    def expected_partial(name, prefix)
-      name = "#{prefix}/#{name}" if prefix.present?
-      expected_partials[name]
-    end
-
-    def empty_template
-      ExpectedPartial.new 'empty'
-    end
-
-    class ExpectedPartial# < ActionView::Template
-      def initialize name
-        #super '(fake template)', 'fake template', ActionView::Template.registered_template_handler(:erb), {}
-        @name = name
-      end
-
-      def locals=(*_) ; end # don't care
-      # ActionView likes these things to be around:
-      attr_accessor :formats, :virtual_path
-
-      def identifier
-        "Test Template #{@name}"
-      end
-
-      def render view, locals
-        @view = view
-        @locals = locals
-        @rendered = true
-        ''
-      end
-
-      def assert expectations
-        assert_rendered!
-      end
-
-      def assert_rendered!
-        fail "Template #{@name} should have been rendered!" unless @rendered
-      end
-    end
   end
 end
