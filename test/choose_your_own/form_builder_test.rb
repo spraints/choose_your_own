@@ -21,34 +21,33 @@ ERB
     expected = <<HTML
 <div class="choose_your_own user_avatar_source_choices">
   <input type="hidden" name="user[avatar_source]" id="user_avatar_source" />
-  <div class="choose_your_own_choice user_avatar_source_choice" id="user_avatar_source_url">
+  <div class="menu">
+    <div class="menu_item" id="menu_for_user_avatar_source_url"         data-value="url"        >Url</div>
+    <div class="menu_item" id="menu_for_user_avatar_source_file_upload" data-value="file_upload">File Upload</div>
+  </div>
+  <div class="choice" id="user_avatar_source_url">
     <input type="text" name="user[avatar_url]" id="user_avatar_url" size="30" />
   </div>
-  <div class="choose_your_own_choice user_avatar_source_choice" id="user_avatar_source_file_upload">
+  <div class="choice" id="user_avatar_source_file_upload">
     <input type="file" name="user[attached_avatar]" id="user_attached_avatar" />
   </div>
 </div>
 HTML
-    actual = HTML::Document.new(actual).root.children.first.children.last.to_s # -> the <div> of intereset
-    assert_dom_equal expected, actual, "example from the readme"
-  end if ENV['SADISTIC']
+    assert_dom_equal expected, select(actual, '.choose_your_own'), 'example from the readome'
+  end
 
   test "creates the hidden bookkeeping element" do
     form_for(@example) do |f|
-      assert_select_html f.choose_your_own(:name_type){}, "input", :count => 1 do |selected|
-        input = selected.first.to_s
-        assert_dom_equal '<input type="hidden" name="example_model[name_type]" id="example_model_name_type" />', input
-      end
+      assert_dom_equal '<input type="hidden" name="example_model[name_type]" id="example_model_name_type" />',
+        select(f.choose_your_own(:name_type){}, 'input')
     end
   end
 
   test "creates the hidden bookkeeping element with an initial value" do
     @example.name_type = "variety_a"
     form_for(@example) do |f|
-      assert_select_html f.choose_your_own(:name_type){}, "input", :count => 1 do |selected|
-        input = selected.first.to_s
-        assert_dom_equal '<input value="variety_a" type="hidden" name="example_model[name_type]" id="example_model_name_type" />', input
-      end
+      assert_dom_equal '<input value="variety_a" type="hidden" name="example_model[name_type]" id="example_model_name_type" />',
+        select(f.choose_your_own(:name_type){}, "input")
     end
   end
 
@@ -75,7 +74,8 @@ HTML
     @example.name_type = 'variety_a'
     form_for(@example) do |f|
       f.choose_your_own :name_type do |x|
-        assert_select_html x.choice(:variety_a), 'div', :class => 'active choice', :count => 1
+        html = x.choice(:variety_a)
+        assert_has_class 'active', html
       end
     end
   end
@@ -98,15 +98,12 @@ HTML
         x.choice(:variety_a)
         x.choice(:variety_b)
       end
-      assert_select_html html, 'ul', :count => 1 do |selected|
-        ul = selected.first.to_s
-        expected =
-          '<ul class="menu">' +
-            '<li id="example_model_menu_name_type_variety_a">Variety A</li>' +
-            '<li id="example_model_menu_name_type_variety_b">Variety B</li>' +
-          '</ul>'
-        assert_dom_equal expected, ul
-      end
+      expected =
+        '<div class="menu">' +
+          '<div class="menu_item" data-value="variety_a" id="menu_for_example_model_name_type_variety_a">Variety A</div>' +
+          '<div class="menu_item" data-value="variety_b" id="menu_for_example_model_name_type_variety_b">Variety B</div>' +
+        '</div>'
+      assert_dom_equal expected, select(html, ".menu")
     end
   end
 
@@ -116,15 +113,12 @@ HTML
         x.choice(:variety_a, "AAA")
         x.choice(:variety_b, "bBb")
       end
-      assert_select_html html, 'ul', :count => 1 do |selected|
-        ul = selected.first.to_s
-        expected =
-          '<ul class="menu">' +
-            '<li id="example_model_menu_name_type_variety_a">AAA</li>' +
-            '<li id="example_model_menu_name_type_variety_b">bBb</li>' +
-          '</ul>'
-        assert_dom_equal expected, ul
-      end
+      expected =
+        '<div class="menu">' +
+          '<div class="menu_item" data-value="variety_a" id="menu_for_example_model_name_type_variety_a">AAA</div>' +
+          '<div class="menu_item" data-value="variety_b" id="menu_for_example_model_name_type_variety_b">bBb</div>' +
+        '</div>'
+      assert_dom_equal expected, select(html, ".menu")
     end
   end
 
@@ -135,20 +129,45 @@ HTML
         x.choice(:variety_a)
         x.choice(:variety_b)
       end
-      assert_select_html html, 'ul', :count => 1 do |selected|
-        ul = selected.first.to_s
-        expected =
-          '<ul class="menu">' +
-            '<li class="active" id="example_model_menu_name_type_variety_a">Variety A</li>' +
-            '<li id="example_model_menu_name_type_variety_b">Variety B</li>' +
-          '</ul>'
-        assert_dom_equal expected, ul
+      expected =
+        '<div class="menu">' +
+          '<div class="menu_item active" data-value="variety_a" id="menu_for_example_model_name_type_variety_a">Variety A</div>' +
+          '<div class="menu_item"        data-value="variety_b" id="menu_for_example_model_name_type_variety_b">Variety B</div>' +
+        '</div>'
+      assert_dom_equal expected, select(html, ".menu")
+    end
+  end
+
+  def assert_has_class(css_class, html)
+    actual_class = HTML::Document.new(html).root.children.first['class'] || ''
+    assert_include actual_class.split(/\s+/), css_class
+  end
+
+  def assert_dom_equal(expected, actual, message = '')
+    expected = strip_empty_nodes(expected)
+    actual   = strip_empty_nodes(actual)
+    super expected, actual, message
+  end
+
+  def strip_empty_nodes(html)
+    HTML::Document.new(html).root.tap{|node| strip_empty_nodes!(node.children)}.to_s
+  end
+
+  def strip_empty_nodes!(nodes)
+    nodes.reject! do |node|
+      case node
+      when HTML::Text
+        node.to_s.strip.empty?
+      else
+        strip_empty_nodes! node.children
+        false
       end
     end
   end
 
-  def assert_select_html html, *args, &block
-    assert_select(HTML::Document.new(html).root, *args, &block)
+  def select(html, selector)
+    conditions = selector =~ /^\.(.*)/ ? {:attributes => {:class => /#{$1}/}} : {:tag => selector}
+    HTML::Document.new(html).find(conditions).to_s
   end
 
   def example_models_path(*_)

@@ -20,16 +20,18 @@ module ChooseYourOwn
         label ||= method.to_s.titleize
         choices << [method, label]
         block ||= lambda {}
-        template.content_tag :div, :class => "#{selected?(method) ? 'active ' : ''}choice", :id => "#{object_name}_#{category_method}_#{method}", &block
+        template.content_tag :div, :class => "#{selected?(method) ? 'active ' : ''}choice", :id => dom_id(method), &block
       end
 
       def menu
-        template.content_tag :ul, :class => 'menu' do
+        template.content_tag :div, :class => 'menu' do
           choices.map do |method, label|
             tag = {}
-            tag[:id] = "#{object_name}_menu_#{category_method}_#{method}" 
-            tag[:class] = 'active' if selected?(method)
-            template.content_tag :li, tag do
+            tag[:id] = "menu_for_#{dom_id(method)}"
+            tag[:class] = 'menu_item'
+            tag[:class] << ' active' if selected?(method)
+            tag['data-value'] = method
+            template.content_tag :div, tag do
               label
             end
           end.join('').html_safe
@@ -47,6 +49,10 @@ module ChooseYourOwn
 
       def selected? method
         selected == method.to_s
+      end
+
+      def dom_id method
+        "#{object_name}_#{category_method}_#{method}"
       end
 
       def choices
