@@ -1,0 +1,22 @@
+.choose_your_own {
+  & > .menu {
+    .menu_item {
+      display: inline-block;
+      padding: 1em;
+      margin: 1em;
+      border: solid thin black;
+      background: gray;
+      &:hover {
+        background: yellow;
+        cursor: pointer;
+      }
+      &.active {
+        background: white;
+      }
+    }
+  }
+  .choice {
+    display: none;
+    &.active { display: block; }
+  }
+}
