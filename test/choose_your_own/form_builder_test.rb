@@ -31,20 +31,24 @@ ERB
 HTML
     actual = HTML::Document.new(actual).root.children.first.children.last.to_s # -> the <div> of intereset
     assert_dom_equal expected, actual, "example from the readme"
-  end
+  end if ENV['SADISTIC']
 
   test "creates the hidden bookkeeping element" do
     form_for(@example) do |f|
-      assert_dom_equal '<div class="choose_your_own example_model_name_type_choices"><input type="hidden" name="example_model[name_type]" id="example_model_name_type" /></div>',
-        f.choose_your_own(:name_type) { |x| }
+      assert_select_html f.choose_your_own(:name_type){}, "input", :count => 1 do |selected|
+        input = selected.first.to_s
+        assert_dom_equal '<input type="hidden" name="example_model[name_type]" id="example_model_name_type" />', input
+      end
     end
   end
 
   test "creates the hidden bookkeeping element with an initial value" do
     @example.name_type = "variety_a"
     form_for(@example) do |f|
-      assert_dom_equal '<div class="choose_your_own example_model_name_type_choices"><input type="hidden" name="example_model[name_type]" id="example_model_name_type" value="variety_a" /></div>',
-        f.choose_your_own(:name_type) { |x| }
+      assert_select_html f.choose_your_own(:name_type){}, "input", :count => 1 do |selected|
+        input = selected.first.to_s
+        assert_dom_equal '<input value="variety_a" type="hidden" name="example_model[name_type]" id="example_model_name_type" />', input
+      end
     end
   end
 
@@ -58,26 +62,25 @@ HTML
     assert ok, "f.choose_your_own should call the provided block"
   end
 
-  test "wraps the element in a div" do
+  test "wraps the choice in a div" do
     form_for(@example) do |f|
       f.choose_your_own :name_type do |x|
-        assert_dom_equal '<div class="choose_your_own_choice example_model_name_type_choice" id="example_model_name_type_variety_a"></div>',
+        assert_dom_equal '<div class="choice" id="example_model_name_type_variety_a"></div>',
           x.choice(:variety_a)
       end
     end
   end
 
-  test "sets the element as active" do
+  test "sets the current choice as active" do
     @example.name_type = 'variety_a'
     form_for(@example) do |f|
       f.choose_your_own :name_type do |x|
-        assert_dom_equal '<div class="active choose_your_own_choice example_model_name_type_choice" id="example_model_name_type_variety_a"></div>',
-          x.choice(:variety_a)
+        assert_select_html x.choice(:variety_a), 'div', :class => 'active choice', :count => 1
       end
     end
   end
 
-  test "renders a template for the option" do
+  test "yields for the choice's content" do
     ok = false
     form_for(@example) do |f|
       f.choose_your_own :name_type do |x|
@@ -87,6 +90,65 @@ HTML
       end
     end
     assert ok, "Expected x.choice to yield"
+  end
+
+  test "produces a menu of choices" do
+    form_for(@example) do |f|
+      html = f.choose_your_own :name_type do |x|
+        x.choice(:variety_a)
+        x.choice(:variety_b)
+      end
+      assert_select_html html, 'ul', :count => 1 do |selected|
+        ul = selected.first.to_s
+        expected =
+          '<ul class="menu">' +
+            '<li id="example_model_menu_name_type_variety_a">Variety A</li>' +
+            '<li id="example_model_menu_name_type_variety_b">Variety B</li>' +
+          '</ul>'
+        assert_dom_equal expected, ul
+      end
+    end
+  end
+
+  test "uses custom text in the menu" do
+    form_for(@example) do |f|
+      html = f.choose_your_own :name_type do |x|
+        x.choice(:variety_a, "AAA")
+        x.choice(:variety_b, "bBb")
+      end
+      assert_select_html html, 'ul', :count => 1 do |selected|
+        ul = selected.first.to_s
+        expected =
+          '<ul class="menu">' +
+            '<li id="example_model_menu_name_type_variety_a">AAA</li>' +
+            '<li id="example_model_menu_name_type_variety_b">bBb</li>' +
+          '</ul>'
+        assert_dom_equal expected, ul
+      end
+    end
+  end
+
+  test "selects the current choice in the menu" do
+    @example.name_type = 'variety_a'
+    form_for(@example) do |f|
+      html = f.choose_your_own :name_type do |x|
+        x.choice(:variety_a)
+        x.choice(:variety_b)
+      end
+      assert_select_html html, 'ul', :count => 1 do |selected|
+        ul = selected.first.to_s
+        expected =
+          '<ul class="menu">' +
+            '<li class="active" id="example_model_menu_name_type_variety_a">Variety A</li>' +
+            '<li id="example_model_menu_name_type_variety_b">Variety B</li>' +
+          '</ul>'
+        assert_dom_equal expected, ul
+      end
+    end
+  end
+
+  def assert_select_html html, *args, &block
+    assert_select(HTML::Document.new(html).root, *args, &block)
   end
 
   def example_models_path(*_)
